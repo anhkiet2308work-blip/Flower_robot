@@ -101,11 +101,11 @@ export default function RobotMode() {
     }))
     
     // NO POPUP HERE - only from remote triggers
-    setActiveAlert(null)
+    // KHÔNG ĐÓNG POPUP - để popup hiển thị cho đến khi user dismiss
   }
 
   const handleDismissAlert = async () => {
-    if (activeAlert && activeAlert.canDismiss) {
+    if (activeAlert) {
       // CHỈ ĐÓNG POPUP - KHÔNG TẮT chức năng cảnh báo
       console.log(`🔕 [USER MODE] Đóng popup cảnh báo: ${activeAlert.id}`)
       

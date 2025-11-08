@@ -23,23 +23,35 @@ export default function ChatBox({ sensorData }) {
       
       // Dừng audio cũ nếu đang phát
       if (audioRef.current) {
+        console.log('🛑 [TTS] Stopping previous audio')
         audioRef.current.pause()
-        audioRef.current.src = ''
+        audioRef.current.currentTime = 0
         audioRef.current = null
       }
       
       // Use our API proxy for Vietnamese TTS
-      const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&lang=vi`
+      const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&lang=vi&t=${Date.now()}`
       
       return new Promise((resolve, reject) => {
         const audio = new Audio()
         audioRef.current = audio
         
+        let hasStarted = false
+        
+        audio.onloadstart = () => {
+          console.log('⏳ [TTS] Loading audio...')
+        }
+        
         audio.onloadeddata = () => {
-          console.log('📥 [TTS] Audio loaded successfully')
+          console.log('📥 [TTS] Audio loaded successfully, duration:', audio.duration)
+        }
+        
+        audio.oncanplaythrough = () => {
+          console.log('✅ [TTS] Audio ready to play')
         }
         
         audio.onplay = () => {
+          hasStarted = true
           console.log('🔊 [TTS] Started speaking')
         }
         
@@ -50,20 +62,47 @@ export default function ChatBox({ sensorData }) {
         }
         
         audio.onerror = (e) => {
-          console.error('❌ [TTS] Audio error:', e)
+          console.error('❌ [TTS] Audio error:', {
+            error: e,
+            code: audio.error?.code,
+            message: audio.error?.message
+          })
           audioRef.current = null
-          reject(e)
+          reject(new Error(`Audio error: ${audio.error?.message || 'Unknown'}`))
+        }
+        
+        audio.onabort = () => {
+          console.warn('⚠️ [TTS] Audio aborted')
+          audioRef.current = null
+          resolve() // Resolve instead of reject to not break flow
         }
         
         // Set src AFTER event listeners
         audio.src = audioUrl
+        audio.load()
         
-        // Play audio and handle promise rejection
-        audio.play().catch(err => {
-          console.error('❌ [TTS] Play error:', err)
-          audioRef.current = null
-          reject(err)
-        })
+        // Play audio with retry
+        const playWithRetry = async (retries = 3) => {
+          for (let i = 0; i < retries; i++) {
+            try {
+              console.log(`🎯 [TTS] Play attempt ${i + 1}/${retries}`)
+              await audio.play()
+              console.log('▶️ [TTS] Play successful')
+              return
+            } catch (err) {
+              console.error(`❌ [TTS] Play attempt ${i + 1} failed:`, err.message)
+              if (i === retries - 1) {
+                audioRef.current = null
+                reject(new Error(`Failed after ${retries} attempts: ${err.message}`))
+              } else {
+                // Wait before retry
+                await new Promise(r => setTimeout(r, 200))
+              }
+            }
+          }
+        }
+        
+        playWithRetry().catch(reject)
       })
     } catch (error) {
       console.error('❌ [TTS] Failed to initialize audio:', error)

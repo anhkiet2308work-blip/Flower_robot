@@ -8,6 +8,7 @@ export default function ChatBox({ sensorData }) {
   const [isListening, setIsListening] = useState(false)
   const [isMuted, setIsMuted] = useState(false) // Trạng thái tắt/bật âm thanh
   const [recognition, setRecognition] = useState(null)
+  const audioRef = useRef(null) // Ref để quản lý audio instance
 
   // Function to speak Vietnamese text using external TTS API
   const speakVietnamese = async (text) => {
@@ -20,11 +21,19 @@ export default function ChatBox({ sensorData }) {
     try {
       console.log('🔊 [TTS] Requesting Vietnamese TTS for:', text.substring(0, 50) + '...')
       
+      // Dừng audio cũ nếu đang phát
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.src = ''
+        audioRef.current = null
+      }
+      
       // Use our API proxy for Vietnamese TTS
       const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&lang=vi`
       
       return new Promise((resolve, reject) => {
-        const audio = new Audio(audioUrl)
+        const audio = new Audio()
+        audioRef.current = audio
         
         audio.onloadeddata = () => {
           console.log('📥 [TTS] Audio loaded successfully')
@@ -36,22 +45,29 @@ export default function ChatBox({ sensorData }) {
         
         audio.onended = () => {
           console.log('✅ [TTS] Finished speaking')
+          audioRef.current = null
           resolve()
         }
         
         audio.onerror = (e) => {
           console.error('❌ [TTS] Audio error:', e)
+          audioRef.current = null
           reject(e)
         }
+        
+        // Set src AFTER event listeners
+        audio.src = audioUrl
         
         // Play audio and handle promise rejection
         audio.play().catch(err => {
           console.error('❌ [TTS] Play error:', err)
+          audioRef.current = null
           reject(err)
         })
       })
     } catch (error) {
       console.error('❌ [TTS] Failed to initialize audio:', error)
+      audioRef.current = null
       throw error
     }
   }

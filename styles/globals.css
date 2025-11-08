@@ -1,0 +1,315 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  min-height: 100vh;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom Animations */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Fire Effect Animations */
+@keyframes flame {
+  0%, 100% { 
+    transform: translateY(0) scaleY(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: translateY(-10px) scaleY(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes smoke {
+  0% { 
+    transform: translateY(0) scale(1);
+    opacity: 0.2;
+  }
+  100% { 
+    transform: translateY(-60px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes spark {
+  0% { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+
+.animate-flame {
+  animation: flame 1s ease-in-out infinite;
+}
+
+.animate-smoke {
+  animation: smoke 3s ease-out infinite;
+}
+
+.animate-spark {
+  animation: spark 1.5s ease-out infinite;
+}
+
+/* Light Effect Animations */
+@keyframes lightray {
+  0% { 
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% { 
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% { 
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-lightray {
+  animation: lightray 2s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+/* Thieves Alarm Effects */
+@keyframes siren-left {
+  0%, 100% { 
+    opacity: 0;
+  }
+  50% { 
+    opacity: 0.6;
+  }
+}
+
+@keyframes siren-right {
+  0%, 100% { 
+    opacity: 0.6;
+  }
+  50% { 
+    opacity: 0;
+  }
+}
+
+@keyframes flash {
+  0%, 100% { 
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+.animate-siren-left {
+  animation: siren-left 1s ease-in-out infinite;
+}
+
+.animate-siren-right {
+  animation: siren-right 1s ease-in-out infinite;
+}
+
+.animate-flash {
+  animation: flash 0.8s ease-in-out infinite;
+}
+
+/* Essential Oil Diffuser Effects */
+@keyframes mist {
+  0% { 
+    transform: translateY(0) scale(1);
+    opacity: 0.4;
+  }
+  100% { 
+    transform: translateY(-80px) scale(1.8);
+    opacity: 0;
+  }
+}
+
+.animate-mist {
+  animation: mist 4s ease-out infinite;
+}
+
+/* Slower smoke animation */
+@keyframes smoke-slow {
+  0% { 
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  100% { 
+    transform: translateY(-100px) scale(2) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+.animate-smoke-slow {
+  animation: smoke-slow 5s ease-out infinite;
+}
+
+/* Thief swaying animation */
+@keyframes sway {
+  0%, 100% { 
+    transform: rotate(-5deg);
+  }
+  50% { 
+    transform: rotate(5deg);
+  }
+}
+
+.animate-sway {
+  animation: sway 2s ease-in-out infinite;
+}
+
+/* Alert Popup Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out;
+}

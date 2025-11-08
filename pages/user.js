@@ -113,6 +113,12 @@ export default function RobotMode() {
       setDismissedAlerts([...dismissedAlerts, activeAlert.id])
       setActiveAlert(null)
       
+      // ĐỒNG BỘ với robot mode: Lưu vào localStorage để robot mode cũng đóng popup
+      localStorage.setItem('dismissAlert', JSON.stringify({
+        id: activeAlert.id,
+        timestamp: Date.now()
+      }))
+      
       // KHÔNG CÓ TIMEOUT - Popup chỉ đóng khi user bấm nút
       // Nếu muốn hiện lại, user phải bật lại chức năng cảnh báo
     }

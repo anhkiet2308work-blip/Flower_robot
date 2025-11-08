@@ -275,6 +275,30 @@ export default function RobotMode() {
     return () => clearInterval(interval)
   }, [latestData, dismissedAlerts, manualToggleInProgress])
 
+  // Lắng nghe khi user mode đóng popup
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'dismissAlert' && e.newValue) {
+        try {
+          const dismissData = JSON.parse(e.newValue)
+          console.log(`👂 [ROBOT MODE] Received dismiss signal from user mode for: ${dismissData.id}`)
+          
+          // Đóng popup nếu ID trùng khớp
+          if (activeAlert && activeAlert.id === dismissData.id) {
+            console.log(`🔕 [ROBOT MODE] Closing popup due to user mode dismiss`)
+            setDismissedAlerts([...dismissedAlerts, dismissData.id])
+            setActiveAlert(null)
+          }
+        } catch (err) {
+          console.error('Error parsing dismiss alert:', err)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [activeAlert, dismissedAlerts])
+
   return (
     <>
       <Head>

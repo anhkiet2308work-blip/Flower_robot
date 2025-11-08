@@ -197,22 +197,24 @@ export default function RobotMode() {
           for (const trigger of triggers) {
             const { sensor, value } = trigger
             
-            // Popup khi ĐỦ CẢ 2 ĐIỀU KIỆN:
+            // Popup khi ĐỦ TẤT CẢ CÁC ĐIỀU KIỆN:
             // 1. Nhận được JSON yêu cầu ON từ remote
-            // 2. Chức năng cảnh báo đang được BẬT (ON) trong database (latestData)
+            // 2. Chức năng cảnh báo đang BẬT (ON) trong database TRƯỚC KHI nhận POST
             // 3. Chưa bị dismiss
             // 4. Không đang trong quá trình toggle thủ công
             
-            const currentValue = String(latestData[sensor]?.value || '').toUpperCase()
+            // Lấy giá trị TRƯỚC khi POST request thay đổi database
+            const wasAlreadyOn = String(latestData[sensor]?.value || '').toUpperCase() === 'ON'
             
             if (sensor === 'fire_alarm' && value === 'ON' 
-                && currentValue === 'ON'
+                && wasAlreadyOn
                 && !dismissedAlerts.includes('fire_alarm')
                 && !manualToggleInProgress) {
               
-              console.log('🔥 [ROBOT MODE] FIRE ALARM TRIGGERED - Both conditions met:', {
+              console.log('🔥 [ROBOT MODE] FIRE ALARM TRIGGERED - All conditions met:', {
                 remoteJSON: value,
-                databaseStatus: currentValue,
+                wasAlreadyOn: wasAlreadyOn,
+                currentDBStatus: latestData.fire_alarm?.value,
                 dismissed: dismissedAlerts.includes('fire_alarm'),
                 manualToggle: manualToggleInProgress
               })
@@ -228,20 +230,23 @@ export default function RobotMode() {
             } else if (sensor === 'fire_alarm' && value === 'ON') {
               console.log('🚫 [ROBOT MODE] FIRE ALARM NOT TRIGGERED - Conditions not met:', {
                 remoteJSON: value,
-                databaseStatus: currentValue,
+                wasAlreadyOn: wasAlreadyOn,
+                currentDBStatus: latestData.fire_alarm?.value,
                 dismissed: dismissedAlerts.includes('fire_alarm'),
-                manualToggle: manualToggleInProgress
+                manualToggle: manualToggleInProgress,
+                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : 'Điều kiện khác không đủ'
               })
             }
             
             if (sensor === 'thieves_alarm' && value === 'ON'
-                && currentValue === 'ON'
+                && wasAlreadyOn
                 && !dismissedAlerts.includes('thieves_alarm')
                 && !manualToggleInProgress) {
               
-              console.log('🚨 [ROBOT MODE] THIEVES ALARM TRIGGERED - Both conditions met:', {
+              console.log('🚨 [ROBOT MODE] THIEVES ALARM TRIGGERED - All conditions met:', {
                 remoteJSON: value,
-                databaseStatus: currentValue,
+                wasAlreadyOn: wasAlreadyOn,
+                currentDBStatus: latestData.thieves_alarm?.value,
                 dismissed: dismissedAlerts.includes('thieves_alarm'),
                 manualToggle: manualToggleInProgress
               })
@@ -257,9 +262,11 @@ export default function RobotMode() {
             } else if (sensor === 'thieves_alarm' && value === 'ON') {
               console.log('🚫 [ROBOT MODE] THIEVES ALARM NOT TRIGGERED - Conditions not met:', {
                 remoteJSON: value,
-                databaseStatus: currentValue,
+                wasAlreadyOn: wasAlreadyOn,
+                currentDBStatus: latestData.thieves_alarm?.value,
                 dismissed: dismissedAlerts.includes('thieves_alarm'),
-                manualToggle: manualToggleInProgress
+                manualToggle: manualToggleInProgress,
+                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : 'Điều kiện khác không đủ'
               })
             }
           }

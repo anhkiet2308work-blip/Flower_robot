@@ -113,10 +113,10 @@ export default function RobotMode() {
       setDismissedAlerts([...dismissedAlerts, activeAlert.id])
       setActiveAlert(null)
       
-      // ROBOT MODE: Sau 60 giây (1 phút) mới có thể hiện popup lại
+      // ROBOT MODE: Sau 5 phút (300 giây) mới có thể hiện popup lại
       setTimeout(() => {
         setDismissedAlerts(prev => prev.filter(id => id !== activeAlert.id))
-      }, 60000)
+      }, 300000)
     }
   }
 
@@ -330,16 +330,12 @@ export default function RobotMode() {
             <SimpleStatusBox
               title="Báo cháy"
               isActive={String(latestData.fire_alarm?.value || '').toUpperCase() === 'ON' && !disabledFeatures.includes('fire_alarm')}
-              canDismiss={true}
-              onDismiss={() => handleDismissStatus('fire_alarm')}
-              onEnable={() => handleEnableStatus('fire_alarm')}
+              canDismiss={false}
             />
             <SimpleStatusBox
               title="Báo trộm"
               isActive={String(latestData.thieves_alarm?.value || '').toUpperCase() === 'ON' && !disabledFeatures.includes('thieves_alarm')}
-              canDismiss={true}
-              onDismiss={() => handleDismissStatus('thieves_alarm')}
-              onEnable={() => handleEnableStatus('thieves_alarm')}
+              canDismiss={false}
             />
             <SimpleStatusBox
               title="Xông tinh dầu"

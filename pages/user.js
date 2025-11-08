@@ -104,91 +104,6 @@ export default function RobotMode() {
     setActiveAlert(null)
   }
 
-  // Check for remote triggers (chỉ popup khi có remote JSON)
-  const checkRemoteTriggers = async () => {
-    try {
-      const response = await axios.get('/api/check-remote-trigger')
-      const { triggers } = response.data
-      
-      if (triggers && triggers.length > 0) {
-        console.log(`📡 [USER MODE] Received ${triggers.length} remote triggers`)
-        
-        for (const trigger of triggers) {
-          const { sensor, value } = trigger
-          
-          // Popup khi ĐỦ CẢ 2 ĐIỀU KIỆN:
-          // 1. Nhận được JSON yêu cầu ON từ remote
-          // 2. Chức năng cảnh báo đang được BẬT (ON) trong database (latestData)
-          // 3. Chưa bị dismiss
-          // 4. Không đang trong quá trình toggle thủ công
-          
-          const currentValue = String(latestData[sensor]?.value || '').toUpperCase()
-          
-          if (sensor === 'fire_alarm' && value === 'ON' 
-              && currentValue === 'ON'
-              && !dismissedAlerts.includes('fire_alarm')
-              && !manualToggleInProgress) {
-            
-            console.log('🔥 [USER MODE] FIRE ALARM TRIGGERED - Both conditions met:', {
-              remoteJSON: value,
-              databaseStatus: currentValue,
-              dismissed: dismissedAlerts.includes('fire_alarm'),
-              manualToggle: manualToggleInProgress
-            })
-            setActiveAlert({
-              id: 'fire_alarm',
-              severity: 'critical',
-              icon: '🔥',
-              title: 'CẢNH BÁO CHÁY',
-              message: 'Phát hiện có cháy! Vui lòng kiểm tra ngay!',
-              canDismiss: true // USER MODE - CÓ nút đóng
-            })
-            speakAlert('Cảnh báo cháy! Phát hiện có lửa! Vui lòng kiểm tra ngay!', 'fire_alarm')
-          } else if (sensor === 'fire_alarm' && value === 'ON') {
-            console.log('🚫 [USER MODE] FIRE ALARM NOT TRIGGERED - Conditions not met:', {
-              remoteJSON: value,
-              databaseStatus: currentValue,
-              dismissed: dismissedAlerts.includes('fire_alarm'),
-              manualToggle: manualToggleInProgress
-            })
-          }
-          
-          if (sensor === 'thieves_alarm' && value === 'ON'
-              && currentValue === 'ON'
-              && !dismissedAlerts.includes('thieves_alarm')
-              && !manualToggleInProgress) {
-            
-            console.log('🚨 [USER MODE] THIEVES ALARM TRIGGERED - Both conditions met:', {
-              remoteJSON: value,
-              databaseStatus: currentValue,
-              dismissed: dismissedAlerts.includes('thieves_alarm'),
-              manualToggle: manualToggleInProgress
-            })
-            setActiveAlert({
-              id: 'thieves_alarm',
-              severity: 'critical',
-              icon: '🚨',
-              title: 'CẢNH BÁO XÂM NHẬP',
-              message: 'Phát hiện có trộm! Cảnh báo an ninh!',
-              canDismiss: true // USER MODE - CÓ nút đóng
-            })
-            speakAlert('Cảnh báo xâm nhập! Phát hiện có trộm! Cảnh báo an ninh!', 'thieves_alarm')
-          } else if (sensor === 'thieves_alarm' && value === 'ON') {
-            console.log('🚫 [USER MODE] THIEVES ALARM NOT TRIGGERED - Conditions not met:', {
-              remoteJSON: value,
-              databaseStatus: currentValue,
-              dismissed: dismissedAlerts.includes('thieves_alarm'),
-              manualToggle: manualToggleInProgress
-            })
-          }
-        }
-      }
-    } catch (error) {
-      // Bỏ qua lỗi, endpoint này không quan trọng
-      console.debug('[USER MODE] Remote trigger check failed:', error.message)
-    }
-  }
-
   const handleDismissAlert = async () => {
     if (activeAlert && activeAlert.canDismiss) {
       // CHỈ ĐÓNG POPUP - KHÔNG TẮT chức năng cảnh báo
@@ -271,8 +186,92 @@ export default function RobotMode() {
 
   useEffect(() => {
     // Poll remote triggers mỗi 5 giây (giảm từ 2s để phù hợp Raspberry Pi)
-    checkRemoteTriggers()
-    const interval = setInterval(checkRemoteTriggers, 5000)
+    const checkTriggers = async () => {
+      try {
+        const response = await axios.get('/api/check-remote-trigger')
+        const { triggers } = response.data
+        
+        if (triggers && triggers.length > 0) {
+          console.log(`📡 [USER MODE] Received ${triggers.length} remote triggers:`, triggers)
+          
+          for (const trigger of triggers) {
+            const { sensor, value } = trigger
+            
+            // Popup khi ĐỦ CẢ 2 ĐIỀU KIỆN:
+            // 1. Nhận được JSON yêu cầu ON từ remote
+            // 2. Chức năng cảnh báo đang được BẬT (ON) trong database (latestData)
+            // 3. Chưa bị dismiss
+            // 4. Không đang trong quá trình toggle thủ công
+            
+            const currentValue = String(latestData[sensor]?.value || '').toUpperCase()
+            
+            if (sensor === 'fire_alarm' && value === 'ON' 
+                && currentValue === 'ON'
+                && !dismissedAlerts.includes('fire_alarm')
+                && !manualToggleInProgress) {
+              
+              console.log('🔥 [USER MODE] FIRE ALARM TRIGGERED - Both conditions met:', {
+                remoteJSON: value,
+                databaseStatus: currentValue,
+                dismissed: dismissedAlerts.includes('fire_alarm'),
+                manualToggle: manualToggleInProgress
+              })
+              setActiveAlert({
+                id: 'fire_alarm',
+                severity: 'critical',
+                icon: '🔥',
+                title: 'CẢNH BÁO CHÁY',
+                message: 'Phát hiện có cháy! Vui lòng kiểm tra ngay!',
+                canDismiss: true // USER MODE - CÓ nút đóng
+              })
+              speakAlert('Cảnh báo cháy! Phát hiện có lửa! Vui lòng kiểm tra ngay!', 'fire_alarm')
+            } else if (sensor === 'fire_alarm' && value === 'ON') {
+              console.log('🚫 [USER MODE] FIRE ALARM NOT TRIGGERED - Conditions not met:', {
+                remoteJSON: value,
+                databaseStatus: currentValue,
+                dismissed: dismissedAlerts.includes('fire_alarm'),
+                manualToggle: manualToggleInProgress
+              })
+            }
+            
+            if (sensor === 'thieves_alarm' && value === 'ON'
+                && currentValue === 'ON'
+                && !dismissedAlerts.includes('thieves_alarm')
+                && !manualToggleInProgress) {
+              
+              console.log('🚨 [USER MODE] THIEVES ALARM TRIGGERED - Both conditions met:', {
+                remoteJSON: value,
+                databaseStatus: currentValue,
+                dismissed: dismissedAlerts.includes('thieves_alarm'),
+                manualToggle: manualToggleInProgress
+              })
+              setActiveAlert({
+                id: 'thieves_alarm',
+                severity: 'critical',
+                icon: '🚨',
+                title: 'CẢNH BÁO XÂM NHẬP',
+                message: 'Phát hiện có trộm! Cảnh báo an ninh!',
+                canDismiss: true // USER MODE - CÓ nút đóng
+              })
+              speakAlert('Cảnh báo xâm nhập! Phát hiện có trộm! Cảnh báo an ninh!', 'thieves_alarm')
+            } else if (sensor === 'thieves_alarm' && value === 'ON') {
+              console.log('🚫 [USER MODE] THIEVES ALARM NOT TRIGGERED - Conditions not met:', {
+                remoteJSON: value,
+                databaseStatus: currentValue,
+                dismissed: dismissedAlerts.includes('thieves_alarm'),
+                manualToggle: manualToggleInProgress
+              })
+            }
+          }
+        }
+      } catch (error) {
+        // Bỏ qua lỗi, endpoint này không quan trọng
+        console.debug('[USER MODE] Remote trigger check failed:', error.message)
+      }
+    }
+    
+    checkTriggers() // Call immediately
+    const interval = setInterval(checkTriggers, 5000)
     return () => clearInterval(interval)
   }, [latestData, dismissedAlerts, manualToggleInProgress])
 

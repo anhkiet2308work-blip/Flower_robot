@@ -8,6 +8,49 @@ export default function ChatBox({ sensorData }) {
   const [isListening, setIsListening] = useState(false)
   const [recognition, setRecognition] = useState(null)
 
+  // Function to speak Vietnamese text
+  const speakVietnamese = (text) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel()
+      
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = 'vi-VN' // Vietnamese language
+      utterance.rate = 1.0 // Normal speed
+      utterance.pitch = 1.0 // Normal pitch
+      utterance.volume = 1.0 // Full volume
+      
+      // Try to find a Vietnamese voice
+      const voices = window.speechSynthesis.getVoices()
+      const vietnameseVoice = voices.find(voice => 
+        voice.lang === 'vi-VN' || voice.lang.startsWith('vi')
+      )
+      
+      if (vietnameseVoice) {
+        utterance.voice = vietnameseVoice
+        console.log('🔊 Using Vietnamese voice:', vietnameseVoice.name)
+      } else {
+        console.log('⚠️ No Vietnamese voice found, using default')
+      }
+      
+      utterance.onstart = () => {
+        console.log('🔊 Started speaking:', text.substring(0, 50) + '...')
+      }
+      
+      utterance.onend = () => {
+        console.log('✅ Finished speaking')
+      }
+      
+      utterance.onerror = (event) => {
+        console.error('❌ Speech error:', event.error)
+      }
+      
+      window.speechSynthesis.speak(utterance)
+    } else {
+      console.warn('⚠️ Speech synthesis not supported')
+    }
+  }
+
   // Initialize Web Speech API
   useEffect(() => {
     if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -77,6 +120,9 @@ export default function ChatBox({ sensorData }) {
 
       const botMessage = { role: 'assistant', content: response.data.reply }
       setMessages(prev => [...prev, botMessage])
+      
+      // Đọc tin nhắn bot bằng tiếng Việt
+      speakVietnamese(response.data.reply)
     } catch (error) {
       console.error('Chat error:', error)
       const errorMessage = { 

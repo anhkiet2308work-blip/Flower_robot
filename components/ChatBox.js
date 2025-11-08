@@ -19,7 +19,15 @@ export default function ChatBox({ sensorData }) {
     }
     
     try {
-      console.log('🔊 [TTS] Requesting Vietnamese TTS for:', text.substring(0, 50) + '...')
+      // Giới hạn độ dài text để TTS hoạt động ổn định
+      const MAX_LENGTH = 500
+      let textToSpeak = text
+      if (text.length > MAX_LENGTH) {
+        console.warn(`⚠️ [TTS] Text too long (${text.length} chars), truncating to ${MAX_LENGTH}`)
+        textToSpeak = text.substring(0, MAX_LENGTH) + '...'
+      }
+      
+      console.log('🔊 [TTS] Requesting Vietnamese TTS for:', textToSpeak.substring(0, 80) + '...', `(${textToSpeak.length} chars)`)
       
       // Dừng audio cũ nếu đang phát
       if (audioRef.current) {
@@ -29,21 +37,29 @@ export default function ChatBox({ sensorData }) {
         audioRef.current = null
       }
       
-      // Use our API proxy for Vietnamese TTS
-      const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&lang=vi&t=${Date.now()}`
+      // Use our API proxy for Vietnamese TTS with timestamp to avoid cache
+      const audioUrl = `/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=vi&t=${Date.now()}`
       
       return new Promise((resolve, reject) => {
         const audio = new Audio()
         audioRef.current = audio
         
-        let hasStarted = false
+        let loadTimeout = null
         
         audio.onloadstart = () => {
           console.log('⏳ [TTS] Loading audio...')
+          // Timeout nếu load quá lâu (10 giây)
+          loadTimeout = setTimeout(() => {
+            console.error('❌ [TTS] Load timeout - taking too long')
+            audio.src = ''
+            audioRef.current = null
+            reject(new Error('Load timeout'))
+          }, 10000)
         }
         
         audio.onloadeddata = () => {
-          console.log('📥 [TTS] Audio loaded successfully, duration:', audio.duration)
+          if (loadTimeout) clearTimeout(loadTimeout)
+          console.log('📥 [TTS] Audio loaded successfully, duration:', audio.duration, 'seconds')
         }
         
         audio.oncanplaythrough = () => {
@@ -51,27 +67,31 @@ export default function ChatBox({ sensorData }) {
         }
         
         audio.onplay = () => {
-          hasStarted = true
           console.log('🔊 [TTS] Started speaking')
         }
         
         audio.onended = () => {
           console.log('✅ [TTS] Finished speaking')
+          if (loadTimeout) clearTimeout(loadTimeout)
           audioRef.current = null
           resolve()
         }
         
         audio.onerror = (e) => {
+          if (loadTimeout) clearTimeout(loadTimeout)
           console.error('❌ [TTS] Audio error:', {
             error: e,
             code: audio.error?.code,
-            message: audio.error?.message
+            message: audio.error?.message,
+            networkState: audio.networkState,
+            readyState: audio.readyState
           })
           audioRef.current = null
           reject(new Error(`Audio error: ${audio.error?.message || 'Unknown'}`))
         }
         
         audio.onabort = () => {
+          if (loadTimeout) clearTimeout(loadTimeout)
           console.warn('⚠️ [TTS] Audio aborted')
           audioRef.current = null
           resolve() // Resolve instead of reject to not break flow
@@ -92,11 +112,12 @@ export default function ChatBox({ sensorData }) {
             } catch (err) {
               console.error(`❌ [TTS] Play attempt ${i + 1} failed:`, err.message)
               if (i === retries - 1) {
+                if (loadTimeout) clearTimeout(loadTimeout)
                 audioRef.current = null
                 reject(new Error(`Failed after ${retries} attempts: ${err.message}`))
               } else {
                 // Wait before retry
-                await new Promise(r => setTimeout(r, 200))
+                await new Promise(r => setTimeout(r, 300))
               }
             }
           }

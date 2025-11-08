@@ -105,17 +105,9 @@ export default function RobotMode() {
   }
 
   const handleDismissAlert = async () => {
-    if (activeAlert) {
-      // CHỈ ĐÓNG POPUP - KHÔNG TẮT chức năng cảnh báo
-      console.log(`🔕 [ROBOT MODE] Đóng popup cảnh báo: ${activeAlert.id}`)
-      
-      // Thêm vào dismissedAlerts để tránh popup hiện lại ngay lập tức
-      setDismissedAlerts([...dismissedAlerts, activeAlert.id])
-      setActiveAlert(null)
-      
-      // KHÔNG CÓ TIMEOUT - Popup chỉ đóng khi user bấm nút
-      // Nếu muốn hiện lại, user phải bật lại chức năng cảnh báo
-    }
+    // ROBOT MODE: Popup CHỈ biến mất khi USER MODE đóng nó
+    // Robot KHÔNG THỂ tự đóng popup
+    console.log(`� [ROBOT MODE] Cannot dismiss alert - only user mode can dismiss`)
   }
 
   const handleDismissStatus = async (id) => {
@@ -225,7 +217,7 @@ export default function RobotMode() {
                 icon: '🔥',
                 title: 'CẢNH BÁO CHÁY',
                 message: 'Phát hiện có cháy! Vui lòng kiểm tra ngay!',
-                canDismiss: true // CHO PHÉP đóng popup
+                canDismiss: false // ROBOT MODE - KHÔNG cho phép robot tự đóng
               })
               speakAlert('Cảnh báo cháy! Phát hiện có lửa! Vui lòng kiểm tra ngay!', 'fire_alarm')
             } else if (sensor === 'fire_alarm' && value === 'ON') {
@@ -257,7 +249,7 @@ export default function RobotMode() {
                 icon: '🚨',
                 title: 'CẢNH BÁO XÂM NHẬP',
                 message: 'Phát hiện có trộm! Cảnh báo an ninh!',
-                canDismiss: true // CHO PHÉP đóng popup
+                canDismiss: false // ROBOT MODE - KHÔNG cho phép robot tự đóng
               })
               speakAlert('Cảnh báo xâm nhập! Phát hiện có trộm! Cảnh báo an ninh!', 'thieves_alarm')
             } else if (sensor === 'thieves_alarm' && value === 'ON') {

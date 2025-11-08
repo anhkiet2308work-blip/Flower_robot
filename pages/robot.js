@@ -202,7 +202,10 @@ export default function RobotMode() {
             // 4. Không đang trong quá trình toggle thủ công
             
             // Lấy giá trị TRƯỚC khi POST request thay đổi database
-            const wasAlreadyOn = String(latestData[sensor]?.value || '').toUpperCase() === 'ON'
+            const currentSensorData = latestData[sensor]
+            const wasAlreadyOn = currentSensorData && String(currentSensorData.value || '').toUpperCase() === 'ON'
+            
+            console.log(`🔍 [CHECK] Sensor: ${sensor}, Remote Value: ${value}, Was Already ON: ${wasAlreadyOn}, Current DB: ${currentSensorData?.value}`)
             
             if (sensor === 'fire_alarm' && value === 'ON' 
                 && wasAlreadyOn

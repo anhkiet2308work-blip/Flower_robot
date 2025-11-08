@@ -6,11 +6,16 @@ export default function ChatBox({ sensorData }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
+  const [isMuted, setIsMuted] = useState(false) // Trạng thái tắt/bật âm thanh
   const [recognition, setRecognition] = useState(null)
 
   // Function to speak Vietnamese text using external TTS API
   const speakVietnamese = async (text) => {
     if (typeof window === 'undefined') return
+    if (isMuted) {
+      console.log('🔇 [TTS] Muted - skipping speech')
+      return
+    }
     
     try {
       console.log('🔊 [TTS] Requesting Vietnamese TTS for:', text.substring(0, 50) + '...')
@@ -207,6 +212,17 @@ export default function ChatBox({ sensorData }) {
           className="flex-1 backdrop-blur-sm bg-white/50 border border-white/30 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all"
           disabled={loading}
         />
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className={`px-2 sm:px-3 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 font-semibold text-sm sm:text-base ${
+            isMuted 
+              ? 'bg-red-100 text-red-600 border-2 border-red-300' 
+              : 'bg-green-100 text-green-600 border-2 border-green-300'
+          }`}
+          title={isMuted ? 'Âm thanh đã tắt' : 'Âm thanh đang bật'}
+        >
+          {isMuted ? '🔇' : '🔊'}
+        </button>
         <button
           onClick={toggleListening}
           disabled={loading}

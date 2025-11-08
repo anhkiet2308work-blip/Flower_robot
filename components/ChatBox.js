@@ -8,46 +8,37 @@ export default function ChatBox({ sensorData }) {
   const [isListening, setIsListening] = useState(false)
   const [recognition, setRecognition] = useState(null)
 
-  // Function to speak Vietnamese text
-  const speakVietnamese = (text) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel()
+  // Function to speak Vietnamese text using external TTS API
+  const speakVietnamese = async (text) => {
+    if (typeof window === 'undefined') return
+    
+    try {
+      console.log('🔊 [TTS] Requesting Vietnamese TTS for:', text.substring(0, 50) + '...')
       
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'vi-VN' // Vietnamese language
-      utterance.rate = 1.0 // Normal speed
-      utterance.pitch = 1.0 // Normal pitch
-      utterance.volume = 1.0 // Full volume
+      // Use our API proxy for Vietnamese TTS
+      const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&lang=vi`
       
-      // Try to find a Vietnamese voice
-      const voices = window.speechSynthesis.getVoices()
-      const vietnameseVoice = voices.find(voice => 
-        voice.lang === 'vi-VN' || voice.lang.startsWith('vi')
-      )
+      const audio = new Audio(audioUrl)
       
-      if (vietnameseVoice) {
-        utterance.voice = vietnameseVoice
-        console.log('🔊 Using Vietnamese voice:', vietnameseVoice.name)
-      } else {
-        console.log('⚠️ No Vietnamese voice found, using default')
+      audio.onloadeddata = () => {
+        console.log('📥 [TTS] Audio loaded successfully')
       }
       
-      utterance.onstart = () => {
-        console.log('🔊 Started speaking:', text.substring(0, 50) + '...')
+      audio.onplay = () => {
+        console.log('🔊 [TTS] Started speaking')
       }
       
-      utterance.onend = () => {
-        console.log('✅ Finished speaking')
+      audio.onended = () => {
+        console.log('✅ [TTS] Finished speaking')
       }
       
-      utterance.onerror = (event) => {
-        console.error('❌ Speech error:', event.error)
+      audio.onerror = (e) => {
+        console.error('❌ [TTS] Audio error:', e)
       }
       
-      window.speechSynthesis.speak(utterance)
-    } else {
-      console.warn('⚠️ Speech synthesis not supported')
+      await audio.play()
+    } catch (error) {
+      console.error('❌ [TTS] Failed to play audio:', error)
     }
   }
 

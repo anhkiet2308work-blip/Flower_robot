@@ -113,10 +113,8 @@ export default function RobotMode() {
       setDismissedAlerts([...dismissedAlerts, activeAlert.id])
       setActiveAlert(null)
       
-      // Sau 10 giây, xóa khỏi dismissedAlerts để có thể hiện popup lại nếu có trigger mới
-      setTimeout(() => {
-        setDismissedAlerts(prev => prev.filter(id => id !== activeAlert.id))
-      }, 10000)
+      // KHÔNG CÓ TIMEOUT - Popup chỉ đóng khi user bấm nút
+      // Nếu muốn hiện lại, user phải bật lại chức năng cảnh báo
     }
   }
 

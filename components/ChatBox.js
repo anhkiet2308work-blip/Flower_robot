@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 
 export default function ChatBox({ sensorData }) {
@@ -18,27 +18,36 @@ export default function ChatBox({ sensorData }) {
       // Use our API proxy for Vietnamese TTS
       const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&lang=vi`
       
-      const audio = new Audio(audioUrl)
-      
-      audio.onloadeddata = () => {
-        console.log('📥 [TTS] Audio loaded successfully')
-      }
-      
-      audio.onplay = () => {
-        console.log('🔊 [TTS] Started speaking')
-      }
-      
-      audio.onended = () => {
-        console.log('✅ [TTS] Finished speaking')
-      }
-      
-      audio.onerror = (e) => {
-        console.error('❌ [TTS] Audio error:', e)
-      }
-      
-      await audio.play()
+      return new Promise((resolve, reject) => {
+        const audio = new Audio(audioUrl)
+        
+        audio.onloadeddata = () => {
+          console.log('📥 [TTS] Audio loaded successfully')
+        }
+        
+        audio.onplay = () => {
+          console.log('🔊 [TTS] Started speaking')
+        }
+        
+        audio.onended = () => {
+          console.log('✅ [TTS] Finished speaking')
+          resolve()
+        }
+        
+        audio.onerror = (e) => {
+          console.error('❌ [TTS] Audio error:', e)
+          reject(e)
+        }
+        
+        // Play audio and handle promise rejection
+        audio.play().catch(err => {
+          console.error('❌ [TTS] Play error:', err)
+          reject(err)
+        })
+      })
     } catch (error) {
-      console.error('❌ [TTS] Failed to play audio:', error)
+      console.error('❌ [TTS] Failed to initialize audio:', error)
+      throw error
     }
   }
 
@@ -112,8 +121,13 @@ export default function ChatBox({ sensorData }) {
       const botMessage = { role: 'assistant', content: response.data.reply }
       setMessages(prev => [...prev, botMessage])
       
-      // Đọc tin nhắn bot bằng tiếng Việt
-      speakVietnamese(response.data.reply)
+      // Đọc tin nhắn bot bằng tiếng Việt - LUÔN CHỜ AUDIO LOAD XONG
+      try {
+        await speakVietnamese(response.data.reply)
+      } catch (ttsError) {
+        console.error('❌ [TTS] Không thể phát giọng nói:', ttsError)
+        // Không cần hiện lỗi cho user, chỉ log ra console
+      }
     } catch (error) {
       console.error('Chat error:', error)
       const errorMessage = { 

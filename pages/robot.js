@@ -201,14 +201,15 @@ export default function RobotMode() {
             
             if (sensor === 'fire_alarm' && value === 'ON' 
                 && wasAlreadyOn
-                && !dismissedAlerts.includes('fire_alarm')
-                && !manualToggleInProgress) {
+                && !manualToggleInProgress
+                && (!activeAlert || activeAlert.id !== 'fire_alarm')) { // CHỈ HIỆN NẾU CHƯA CÓ POPUP FIRE
               
               console.log('🔥 [ROBOT MODE] FIRE ALARM TRIGGERED - All conditions met:', {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.fire_alarm?.value,
-                dismissed: dismissedAlerts.includes('fire_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress
               })
               setActiveAlert({
@@ -225,22 +226,24 @@ export default function RobotMode() {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.fire_alarm?.value,
-                dismissed: dismissedAlerts.includes('fire_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress,
-                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : 'Điều kiện khác không đủ'
+                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : activeAlert?.id === 'fire_alarm' ? 'Popup đang hiển thị' : 'Điều kiện khác không đủ'
               })
             }
             
             if (sensor === 'thieves_alarm' && value === 'ON'
                 && wasAlreadyOn
-                && !dismissedAlerts.includes('thieves_alarm')
-                && !manualToggleInProgress) {
+                && !manualToggleInProgress
+                && (!activeAlert || activeAlert.id !== 'thieves_alarm')) { // CHỈ HIỆN NẾU CHƯA CÓ POPUP THIEVES
               
               console.log('🚨 [ROBOT MODE] THIEVES ALARM TRIGGERED - All conditions met:', {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.thieves_alarm?.value,
-                dismissed: dismissedAlerts.includes('thieves_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress
               })
               setActiveAlert({
@@ -257,9 +260,10 @@ export default function RobotMode() {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.thieves_alarm?.value,
-                dismissed: dismissedAlerts.includes('thieves_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress,
-                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : 'Điều kiện khác không đủ'
+                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : activeAlert?.id === 'thieves_alarm' ? 'Popup đang hiển thị' : 'Điều kiện khác không đủ'
               })
             }
           }
@@ -286,7 +290,6 @@ export default function RobotMode() {
           // Đóng popup nếu ID trùng khớp
           if (activeAlert && activeAlert.id === dismissData.id) {
             console.log(`🔕 [ROBOT MODE] Closing popup due to user mode dismiss`)
-            setDismissedAlerts([...dismissedAlerts, dismissData.id])
             setActiveAlert(null)
           }
         } catch (err) {
@@ -297,7 +300,7 @@ export default function RobotMode() {
 
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [activeAlert, dismissedAlerts])
+  }, [activeAlert])
 
   return (
     <>

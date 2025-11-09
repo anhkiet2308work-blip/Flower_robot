@@ -109,8 +109,6 @@ export default function RobotMode() {
       // CHỈ ĐÓNG POPUP - KHÔNG TẮT chức năng cảnh báo
       console.log(`🔕 [USER MODE] Đóng popup cảnh báo: ${activeAlert.id}`)
       
-      // Thêm vào dismissedAlerts để tránh popup hiện lại ngay lập tức
-      setDismissedAlerts([...dismissedAlerts, activeAlert.id])
       setActiveAlert(null)
       
       // ĐỒNG BỘ với robot mode: Lưu vào localStorage để robot mode cũng đóng popup
@@ -120,7 +118,7 @@ export default function RobotMode() {
       }))
       
       // KHÔNG CÓ TIMEOUT - Popup chỉ đóng khi user bấm nút
-      // Nếu muốn hiện lại, user phải bật lại chức năng cảnh báo
+      // Popup có thể hiện lại nếu nhận trigger mới
     }
   }
 
@@ -215,14 +213,15 @@ export default function RobotMode() {
             
             if (sensor === 'fire_alarm' && value === 'ON' 
                 && wasAlreadyOn
-                && !dismissedAlerts.includes('fire_alarm')
-                && !manualToggleInProgress) {
+                && !manualToggleInProgress
+                && (!activeAlert || activeAlert.id !== 'fire_alarm')) { // CHỈ HIỆN NẾU CHƯA CÓ POPUP FIRE
               
               console.log('🔥 [USER MODE] FIRE ALARM TRIGGERED - All conditions met:', {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.fire_alarm?.value,
-                dismissed: dismissedAlerts.includes('fire_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress
               })
               setActiveAlert({
@@ -239,22 +238,24 @@ export default function RobotMode() {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.fire_alarm?.value,
-                dismissed: dismissedAlerts.includes('fire_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress,
-                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : 'Điều kiện khác không đủ'
+                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : activeAlert?.id === 'fire_alarm' ? 'Popup đang hiển thị' : 'Điều kiện khác không đủ'
               })
             }
             
             if (sensor === 'thieves_alarm' && value === 'ON'
                 && wasAlreadyOn
-                && !dismissedAlerts.includes('thieves_alarm')
-                && !manualToggleInProgress) {
+                && !manualToggleInProgress
+                && (!activeAlert || activeAlert.id !== 'thieves_alarm')) { // CHỈ HIỆN NẾU CHƯA CÓ POPUP THIEVES
               
               console.log('🚨 [USER MODE] THIEVES ALARM TRIGGERED - All conditions met:', {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.thieves_alarm?.value,
-                dismissed: dismissedAlerts.includes('thieves_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress
               })
               setActiveAlert({
@@ -271,9 +272,10 @@ export default function RobotMode() {
                 remoteJSON: value,
                 wasAlreadyOn: wasAlreadyOn,
                 currentDBStatus: latestData.thieves_alarm?.value,
-                dismissed: dismissedAlerts.includes('thieves_alarm'),
+                hasActiveAlert: !!activeAlert,
+                activeAlertId: activeAlert?.id,
                 manualToggle: manualToggleInProgress,
-                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : 'Điều kiện khác không đủ'
+                reason: !wasAlreadyOn ? 'Chức năng đang TẮT' : activeAlert?.id === 'thieves_alarm' ? 'Popup đang hiển thị' : 'Điều kiện khác không đủ'
               })
             }
           }
@@ -384,12 +386,12 @@ export default function RobotMode() {
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2">
                 <h2 className="text-white font-bold text-center">📹 Camera Stream</h2>
               </div>
-              <div className="relative" style={{ paddingBottom: '56.25%', height: 0 }}>
-                <iframe
-                  src="https://ionogenic-uncollectible-miesha.ngrok-free.dev/"
-                  className="absolute top-0 left-0 w-full h-full border-0"
-                  allowFullScreen
-                  title="Robot Camera Stream"
+              <div className="p-4 bg-black flex items-center justify-center">
+                <img 
+                  src="https://camera.flower-robot.space/video_feed" 
+                  alt="Camera"
+                  className="w-full h-auto rounded-lg"
+                  style={{ maxHeight: '500px', objectFit: 'contain' }}
                 />
               </div>
             </div>

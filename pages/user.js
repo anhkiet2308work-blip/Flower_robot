@@ -147,8 +147,11 @@ export default function RobotMode() {
     // Reset trạng thái đã đọc để có thể đọc lại khi bật lại
     setHasSpokenAlert(prev => ({ ...prev, [id]: false }))
     
-    // Reset flag sau 6 giây (dài hơn polling interval 5s)
-    setTimeout(() => setManualToggleInProgress(false), 6000)
+    // Reset flag sau 2 giây
+    setTimeout(() => {
+      setManualToggleInProgress(false)
+      console.log('✅ Manual toggle flag reset')
+    }, 2000)
   }
 
   const handleEnableStatus = async (id) => {
@@ -171,12 +174,19 @@ export default function RobotMode() {
       // Remove from disabled list để hiện trạng thái ON
       setDisabledFeatures(disabledFeatures.filter(item => item !== id))
       setDismissedAlerts(dismissedAlerts.filter(item => item !== id))
+      
+      // FETCH DATA NGAY để đồng bộ latestData
+      await fetchLatestData()
+      console.log('✅ Đã fetch data mới sau khi bật cảnh báo')
     } catch (error) {
       console.error('❌ LỖI khi cập nhật database:', error)
     }
     
-    // Reset flag sau 6 giây (dài hơn polling interval 5s)
-    setTimeout(() => setManualToggleInProgress(false), 6000)
+    // Reset flag sau 2 giây (đủ để fetch xong)
+    setTimeout(() => {
+      setManualToggleInProgress(false)
+      console.log('✅ Manual toggle flag reset - ready for remote triggers')
+    }, 2000)
   }
 
   useEffect(() => {
@@ -386,12 +396,12 @@ export default function RobotMode() {
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2">
                 <h2 className="text-white font-bold text-center">📹 Camera Stream</h2>
               </div>
-              <div className="p-4 bg-black flex items-center justify-center">
-                <img 
-                  src="https://camera.flower-robot.space/video_feed" 
-                  alt="Camera"
-                  className="w-full h-auto rounded-lg"
-                  style={{ maxHeight: '500px', objectFit: 'contain' }}
+              <div className="relative" style={{ paddingBottom: '56.25%', height: 0 }}>
+                <iframe
+                  src="https://camera.flower-robot.space/video_feed"
+                  className="absolute top-0 left-0 w-full h-full border-0"
+                  allowFullScreen
+                  title="Robot Camera Stream"
                 />
               </div>
             </div>

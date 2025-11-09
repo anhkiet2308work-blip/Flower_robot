@@ -135,8 +135,11 @@ export default function RobotMode() {
     // Reset trạng thái đã đọc để có thể đọc lại khi bật lại
     setHasSpokenAlert(prev => ({ ...prev, [id]: false }))
     
-    // Reset flag sau 6 giây (dài hơn polling interval 5s)
-    setTimeout(() => setManualToggleInProgress(false), 6000)
+    // Reset flag sau 2 giây
+    setTimeout(() => {
+      setManualToggleInProgress(false)
+      console.log('✅ Manual toggle flag reset')
+    }, 2000)
   }
 
   const handleEnableStatus = async (id) => {
@@ -159,12 +162,19 @@ export default function RobotMode() {
       // Remove from disabled list để hiện trạng thái ON
       setDisabledFeatures(disabledFeatures.filter(item => item !== id))
       setDismissedAlerts(dismissedAlerts.filter(item => item !== id))
+      
+      // FETCH DATA NGAY để đồng bộ latestData
+      await fetchData()
+      console.log('✅ Đã fetch data mới sau khi bật cảnh báo')
     } catch (error) {
       console.error('❌ LỖI khi cập nhật database:', error)
     }
     
-    // Reset flag sau 6 giây (dài hơn polling interval 5s)
-    setTimeout(() => setManualToggleInProgress(false), 6000)
+    // Reset flag sau 2 giây (đủ để fetch xong)
+    setTimeout(() => {
+      setManualToggleInProgress(false)
+      console.log('✅ Manual toggle flag reset - ready for remote triggers')
+    }, 2000)
   }
 
   useEffect(() => {
